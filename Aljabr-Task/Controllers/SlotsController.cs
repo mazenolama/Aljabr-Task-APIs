@@ -7,7 +7,7 @@ using SlotManagement.Models;
 
 namespace SlotManagement.Controllers
 {
-    [Authorize] // ✅ Requires valid JWT token for all actions
+    [Authorize] // Requires valid JWT token for all actions
     [ApiController]
     [Route("api/[controller]")]
     public class SlotsController : ControllerBase
