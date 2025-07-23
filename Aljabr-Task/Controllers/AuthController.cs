@@ -21,17 +21,6 @@ namespace Aljabr_Task.Controllers
             _config = config;
             _db = db;
         }
-
-        //[HttpPost("login")]
-        //public IActionResult Login([FromBody] LoginRequest request)
-        //{
-        //    var user = _db.Users.SingleOrDefault(u => u.Email == request.Email && u.Password == request.Password);
-        //    if (user == null)
-        //        return Unauthorized("Invalid credentials");
-
-        //    var token = GenerateToken(user);
-        //    return Ok(new { Token = token });
-        //}
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {

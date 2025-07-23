@@ -11,6 +11,8 @@ namespace SlotManagement.Models
         public bool IsAvailable { get; set; } = true;
         public string Status { get; set; } = string.Empty;
         public int? CreatedBy { get; set; }
+        public User? CreatedByUser { get; set; } 
+
         public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
         public DateTime ModifiedOn { get; set; } = DateTime.UtcNow;
         public bool Deleted { get; set; } = false;

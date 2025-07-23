@@ -1,7 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SlotManagement.Models;
-using System.Collections.Generic;
-
 
 namespace SlotManagement.Data
 {
@@ -11,5 +9,16 @@ namespace SlotManagement.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Slot> Slots { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Slot>()
+                .HasOne(s => s.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(s => s.CreatedBy)
+                .HasPrincipalKey(u => u.UserId);
+        }
     }
 }

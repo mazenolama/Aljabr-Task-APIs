@@ -22,6 +22,9 @@ namespace SlotManagement.Dtos
         [JsonPropertyName("created_by")]
         public int? CreatedBy { get; set; }
 
+        [JsonPropertyName("created_by_name")]
+        public string? CreatedByName { get; set; }
+
         [JsonPropertyName("created_on")]
         public string CreatedOn { get; set; } = "";
 

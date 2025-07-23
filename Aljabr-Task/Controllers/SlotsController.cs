@@ -24,7 +24,9 @@ namespace SlotManagement.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SlotDto>>> GetSlots(
         [FromQuery] DateTime? date,
-        [FromQuery] string? status)
+        [FromQuery] string? status,
+        [FromQuery] int? userId)
+
         {
             var query = _context.Slots.AsQueryable();
 
@@ -57,20 +59,29 @@ namespace SlotManagement.Controllers
                     return BadRequest("Invalid status value.");
                 }
             }
+            // Filter with UserId
+            if (userId.HasValue)
+            {
+                query = query.Where(s => s.CreatedBy == userId.Value);
+            }
 
             var slots = await query
-                .Select(s => new SlotDto
-                {
-                    Id = s.SlotId,
-                    Start = s.StartTime.ToUniversalTime().ToString("yyyy-MM-dd HH:mm"),
-                    End = s.EndTime.ToUniversalTime().ToString("yyyy-MM-dd HH:mm"),
-                    Available = s.IsAvailable,
-                    Status = s.Status.ToString(),
-                    CreatedBy = s.CreatedBy,
-                    CreatedOn = s.CreatedOn.ToUniversalTime().ToString("yyyy-MM-dd"),
-                    ModifiedOn = s.ModifiedOn.ToUniversalTime().ToString("yyyy-MM-dd")
-                })
-                .ToListAsync();
+            .Include(s => s.CreatedByUser)
+            .Select(s => new SlotDto
+            {
+                Id = s.SlotId,
+                Start = s.StartTime.ToUniversalTime().ToString("yyyy-MM-dd HH:mm"),
+                End = s.EndTime.ToUniversalTime().ToString("yyyy-MM-dd HH:mm"),
+                Available = s.IsAvailable,
+                Status = s.Status,
+                CreatedBy = s.CreatedBy,
+                CreatedByName = s.CreatedByUser != null ? s.CreatedByUser.Name : null,
+                CreatedOn = s.CreatedOn.ToUniversalTime().ToString("yyyy-MM-dd"),
+                ModifiedOn = s.ModifiedOn.ToUniversalTime().ToString("yyyy-MM-dd")
+            })
+            .ToListAsync();
+
+
 
             return Ok(slots);
         }
@@ -97,7 +108,7 @@ namespace SlotManagement.Controllers
 
             if (conflictExists)
             {
-                return Conflict("A slot already exists that overlaps with the specified time range.");
+                return Conflict(new { error = "A slot already exists that overlaps with the specified time range." });
             }
 
             slot.StartTime = newStart;
@@ -111,15 +122,34 @@ namespace SlotManagement.Controllers
         // Only Admins can update a slot
         [Authorize(Roles = "admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSlot(int id, Slot slot)
+        public async Task<IActionResult> UpdateSlot(int id, [FromBody] Slot updatedData)
         {
-            if (id != slot.SlotId)
-                return BadRequest();
+            var slot = await _context.Slots.FindAsync(id);
+            if (slot == null)
+                return NotFound();
 
-            _context.Entry(slot).State = EntityState.Modified;
+            // Disallow update if slot is booked
+            if (slot.Status.Equals("booked", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { error = "Cannot update a booked slot." });
+            }
+
+            if (!string.IsNullOrWhiteSpace(updatedData.Status))
+                slot.Status = updatedData.Status;
+
+            if (updatedData.StartTime != default)
+                slot.StartTime = DateTime.SpecifyKind(updatedData.StartTime, DateTimeKind.Utc);
+
+            if (updatedData.EndTime != default)
+                slot.EndTime = DateTime.SpecifyKind(updatedData.EndTime, DateTimeKind.Utc);
+
+            slot.ModifiedOn = DateTime.UtcNow;
+
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok(slot);
         }
+
+
 
         [Authorize(Roles = "user")]  
         [HttpPut("{id}/book")]
