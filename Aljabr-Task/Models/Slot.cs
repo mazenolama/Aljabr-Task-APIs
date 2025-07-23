@@ -9,7 +9,7 @@ namespace SlotManagement.Models
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public bool IsAvailable { get; set; } = true;
-        public SlotStatus Status { get; set; } = SlotStatus.Available;
+        public string Status { get; set; } = string.Empty;
         public int? CreatedBy { get; set; }
         public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
         public DateTime ModifiedOn { get; set; } = DateTime.UtcNow;
